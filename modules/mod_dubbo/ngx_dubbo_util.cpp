@@ -153,6 +153,9 @@ ngx_dubbo_hessian2_decode_payload_map(ngx_pool_t *pool, ngx_str_t *in, ngx_array
             ByteArray *bValue = NULL;
 
             kv = (ngx_keyval_t*)ngx_array_push(pres);
+            if (kv == NULL) {
+                return NGX_ERROR;
+            }
             if (sKey) {
                 string p = sKey->to_string();
                 kv->key.data = (u_char*)ngx_palloc(pool, sKey->size());

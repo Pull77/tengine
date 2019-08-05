@@ -440,7 +440,6 @@ ngx_dubbo_init_connection(ngx_dubbo_connection_t *dubbo_c, ngx_connection_t *c, 
 
     ngx_memzero(dubbo_c, sizeof(ngx_dubbo_connection_t));
 
-    dubbo_c->pool = c->pool;
     dubbo_c->log = c->log;
     dubbo_c->data = (void*)c;
 
@@ -451,7 +450,7 @@ ngx_dubbo_init_connection(ngx_dubbo_connection_t *dubbo_c, ngx_connection_t *c, 
         return NGX_ERROR;
     }
 
-    cln = ngx_pool_cleanup_add(dubbo_c->pool, 0);
+    cln = ngx_pool_cleanup_add(c->pool, 0);
     if (cln == NULL) {
         return NGX_ERROR;
     }

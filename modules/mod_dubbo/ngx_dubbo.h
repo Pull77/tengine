@@ -80,7 +80,6 @@ typedef enum {
 } ngx_dubbo_parse_state_t;
 
 typedef struct {
-    ngx_pool_t                     *pool;
     ngx_pool_t                     *temp_pool;
 
 
