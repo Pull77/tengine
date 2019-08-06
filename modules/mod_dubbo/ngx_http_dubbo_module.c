@@ -380,17 +380,6 @@ ngx_http_dubbo_response_handler(ngx_connection_t *pc, ngx_http_request_t *r, ngx
         return NGX_ERROR;
     }
 
-    cl = ngx_chain_get_free_buf(r->pool, &u->free_bufs);
-    if (cl == NULL) {
-        return NGX_ERROR;
-    }
-
-    u->out_bufs = cl;
-    buf = u->out_bufs->buf;
-
-    buf->flush = 1;
-    buf->memory = 1;
-
     u->headers_in.status_n = NGX_HTTP_BAD_GATEWAY;
     u->state->status = NGX_HTTP_BAD_GATEWAY;
 
@@ -398,6 +387,17 @@ ngx_http_dubbo_response_handler(ngx_connection_t *pc, ngx_http_request_t *r, ngx
     for (i=0; i < result->nelts; i++) {
         if (kv[i].key.len == 4 && 0 == ngx_strncasecmp(kv[i].key.data,
                     ngx_http_dubbo_str_body.data, ngx_http_dubbo_str_body.len)) {
+            cl = ngx_chain_get_free_buf(r->pool, &u->free_bufs);
+            if (cl == NULL) {
+                return NGX_ERROR;
+            }
+
+            u->out_bufs = cl;
+            buf = u->out_bufs->buf;
+
+            buf->flush = 1;
+            buf->memory = 1;
+
             buf->pos = kv[i].value.data;
             buf->last = kv[i].value.data + kv[i].value.len;
 
