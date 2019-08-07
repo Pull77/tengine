@@ -387,19 +387,21 @@ ngx_http_dubbo_response_handler(ngx_connection_t *pc, ngx_http_request_t *r, ngx
     for (i=0; i < result->nelts; i++) {
         if (kv[i].key.len == 4 && 0 == ngx_strncasecmp(kv[i].key.data,
                     ngx_http_dubbo_str_body.data, ngx_http_dubbo_str_body.len)) {
-            cl = ngx_chain_get_free_buf(r->pool, &u->free_bufs);
-            if (cl == NULL) {
-                return NGX_ERROR;
+            if (kv[i].value.len > 0 && kv[i].value.data != NULL) {
+                cl = ngx_chain_get_free_buf(r->pool, &u->free_bufs);
+                if (cl == NULL) {
+                    return NGX_ERROR;
+                }
+
+                u->out_bufs = cl;
+                buf = u->out_bufs->buf;
+
+                buf->flush = 1;
+                buf->memory = 1;
+
+                buf->pos = kv[i].value.data;
+                buf->last = kv[i].value.data + kv[i].value.len;
             }
-
-            u->out_bufs = cl;
-            buf = u->out_bufs->buf;
-
-            buf->flush = 1;
-            buf->memory = 1;
-
-            buf->pos = kv[i].value.data;
-            buf->last = kv[i].value.data + kv[i].value.len;
 
             u->headers_in.content_length_n = kv[i].value.len;
         } else if (kv[i].key.len == 6 && 0 == ngx_strncasecmp(kv[i].key.data, ngx_http_dubbo_str_status.data, ngx_http_dubbo_str_status.len)) {
