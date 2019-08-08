@@ -206,7 +206,7 @@ ngx_http_multi_upstream_init_peer(ngx_http_request_t *r,
     kcf = ngx_http_conf_upstream_srv_conf(us,
                                           ngx_http_multi_upstream_module);
 
-    kp = ngx_palloc(r->connection->pool, sizeof(ngx_http_multi_upstream_peer_data_t));
+    kp = ngx_pcalloc(r->connection->pool, sizeof(ngx_http_multi_upstream_peer_data_t));
     if (kp == NULL) {
         return NGX_ERROR;
     }
@@ -380,6 +380,7 @@ ngx_http_multi_upstream_init_connection(ngx_connection_t *c,
     ngx_http_request_t                   *r;
     ngx_http_request_t                   *fake_r;
     ngx_http_log_ctx_t                   *log_ctx;
+    ngx_http_upstream_t                  *u, *fake_u;
 
     c->pool = ngx_create_pool(128, kp->request->connection->log);
     if (c->pool == NULL) {
@@ -412,25 +413,37 @@ ngx_http_multi_upstream_init_connection(ngx_connection_t *c,
     fake_r->main_conf = r->main_conf;
     fake_r->srv_conf = r->srv_conf;
     fake_r->loc_conf = r->loc_conf;
-    fake_r->upstream = ngx_palloc(c->pool, sizeof(ngx_http_upstream_t));
-    *fake_r->upstream = *r->upstream;
+    fake_r->upstream = ngx_pcalloc(c->pool, sizeof(ngx_http_upstream_t));
+    if (fake_r->upstream == NULL) {
+        return NGX_ERROR;
+    }
 
-    fake_r->upstream->request_bufs = NULL;
-    fake_r->upstream->output.pool = fake_r->pool;
-    fake_r->upstream->writer.pool = fake_r->pool;
-    fake_r->upstream->input_filter_ctx = fake_r;
+    u = r->upstream;
+    fake_u = fake_r->upstream;
+
+    //*fake_r->upstream = *r->upstream;
+    fake_u->output.pool = fake_r->pool;
+    fake_u->writer.pool = fake_r->pool;
+    fake_u->input_filter_ctx = fake_r;
+    fake_u->conf = u->conf;
+    fake_u->upstream = u->upstream;
+    fake_u->state = ngx_pcalloc(c->pool, sizeof(ngx_http_upstream_state_t));
+    if (fake_u->state == NULL) {
+        return NGX_ERROR;
+    }
+    fake_u->multi = 1;
 
     fake_r->connection = c;
 
     c->data = fake_r;
 
-    c->log = ngx_palloc(c->pool, sizeof(ngx_log_t));
+    c->log = ngx_pcalloc(c->pool, sizeof(ngx_log_t));
     if (c->log == NULL) {
         return NGX_ERROR;
     }
     *c->log = *kp->request->connection->log;
 
-    log_ctx = ngx_palloc(c->pool, sizeof(ngx_http_log_ctx_t));
+    log_ctx = ngx_pcalloc(c->pool, sizeof(ngx_http_log_ctx_t));
     if (log_ctx == NULL) {
         return NGX_ERROR;
     }
@@ -439,7 +452,7 @@ ngx_http_multi_upstream_init_connection(ngx_connection_t *c,
     log_ctx->request = fake_r;
     log_ctx->current_request = fake_r;
 
-    c->log = ngx_palloc(c->pool, sizeof(ngx_log_t));
+    c->log = ngx_pcalloc(c->pool, sizeof(ngx_log_t));
     if (c->log == NULL) {
         return NGX_ERROR;
     }
