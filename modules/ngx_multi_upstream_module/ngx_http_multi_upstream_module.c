@@ -422,6 +422,7 @@ ngx_http_multi_upstream_init_connection(ngx_connection_t *c,
     fake_u = fake_r->upstream;
 
     //*fake_r->upstream = *r->upstream;
+    fake_u->peer.connection = c;
     fake_u->output.pool = fake_r->pool;
     fake_u->writer.pool = fake_r->pool;
     fake_u->input_filter_ctx = fake_r;
@@ -431,6 +432,23 @@ ngx_http_multi_upstream_init_connection(ngx_connection_t *c,
     if (fake_u->state == NULL) {
         return NGX_ERROR;
     }
+
+    fake_u->read_event_handler = u->read_event_handler;
+    fake_u->write_event_handler = u->write_event_handler;
+    fake_u->input_filter_init = u->input_filter_init;
+    fake_u->input_filter = u->input_filter;
+    fake_u->input_filter_ctx = NULL;
+#if (NGX_HTTP_CACHE)
+    fake_u->create_key = u->create_key;
+#endif
+    fake_u->create_request = u->create_request;
+    fake_u->reinit_request = u->reinit_request;
+    fake_u->process_header = u->process_header;
+    fake_u->abort_request = u->abort_request;
+    fake_u->finalize_request = u->finalize_request;
+    fake_u->rewrite_redirect = u->rewrite_redirect;
+    fake_u->rewrite_cookie = u->rewrite_cookie;
+
     fake_u->multi = 1;
 
     fake_r->connection = c;
