@@ -1459,6 +1459,7 @@ string* hessian2_input::read_bytes() {
             return dest;
         case 65:
             --_curr;
+            safeguard.release();
             return read_chunked_bytes(dest);
         case 66:
             {
