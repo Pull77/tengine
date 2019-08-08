@@ -423,6 +423,17 @@ ngx_http_multi_upstream_init_connection(ngx_connection_t *c,
 
     //*fake_r->upstream = *r->upstream;
     fake_u->peer.connection = c;
+#if (NGX_HAVE_FILE_AIO || NGX_COMPAT)
+    fake_u->output.aio_handler = u->output.aio_handler;
+#if (NGX_HAVE_AIO_SENDFILE || NGX_COMPAT)
+    fake_u->output.aio_preload = u->output.aio_preload;
+#endif
+#endif
+
+#if (NGX_THREADS || NGX_COMPAT)
+    fake_u->output.thread_handler = u->output.thread_handler;
+#endif
+    fake_u->output.output_filter = u->output.output_filter;
     fake_u->output.pool = fake_r->pool;
     fake_u->writer.pool = fake_r->pool;
     fake_u->input_filter_ctx = fake_r;
@@ -448,6 +459,7 @@ ngx_http_multi_upstream_init_connection(ngx_connection_t *c,
     fake_u->finalize_request = u->finalize_request;
     fake_u->rewrite_redirect = u->rewrite_redirect;
     fake_u->rewrite_cookie = u->rewrite_cookie;
+
 
     fake_u->multi = 1;
 
